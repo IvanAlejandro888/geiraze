@@ -1,9 +1,10 @@
 # Geiraze
+
 ---
 
 Geiraze is an 8 bit compression algorithm that works by abbreviating character pairs using an inner dictionary.
 
-##Methods:
+## Methods:
 
 **Compression:**
 
