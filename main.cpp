@@ -19,6 +19,10 @@
 
 #include "importer.h"
 
+double percentOf(size_t a, size_t b);
+
+const char* help = "\nUsage: geiraze [OPTION] [INPUT] [OUTPUT]\nGeiraze is a lossy text compression tool that just keeps text and few symbols.\n\nOperations:\n\t--c\tCompress a text file\n\t--e\tExtract a file compressed used Geiraze\n\n";
+
 int main(int argc, char **argv) {
     
     // Initialize
@@ -26,16 +30,27 @@ int main(int argc, char **argv) {
     Charman charman;
     Codecman codecman;
     
+    // Check if there is first argument
+    if(argc < 2){
+        printf(help);
+        return 0;
+    }
+    
     // Help
     if(strncmp("--help", argv[1], strlen(argv[1])) == 0){
-        printf(
-            "\nUsage: geiraze [OPTION] [INPUT] [OUTPUT]\nGeiraze is a lossy text compression tool that just keeps text and few symbols.\n\nOperations:\n\t--c\tCompress a text file\n\t--e\tExtract a file compressed used Geiraze\n\n"
-        );
+        printf(help);
         return 0;
     }else
     
     // Compress
     if(strncmp("--c", argv[1], strlen(argv[1])) == 0){
+        
+        // Check if there is second and third argument
+        if(argc < 4){
+            printf("Missing arguments!\n");
+            printf(help);
+            return 0;
+        }
         
         // Get data from user
         fileman.setFilenames(argv[2], argv[3], false);
@@ -47,11 +62,19 @@ int main(int argc, char **argv) {
         // Replace (generate output)
         std::string geirazeChars = codecman.replace(pairs);
         
-        // Print quality lost
-        printf("Quality lost: %lu\n", (unsigned long int) codecman.getTotalLost());
-        
         // Write output
         fileman.writeOutput((char*) geirazeChars.c_str());
+        
+        // Compare size
+        double compressedSize = percentOf(fileman.getInSize(), geirazeChars.size());
+        
+        printf("Original size:  %dB (100%%)\n", fileman.getInSize());
+        printf("Final size:     %zuB (%g%%)\n", geirazeChars.size(), compressedSize);
+        
+        printf("Size reduction: %zuB (-%g%%)\n", fileman.getInSize() - geirazeChars.size(), 100-compressedSize);
+        
+        // Print quality lost
+        printf("Quality lost:   %lu\n", (unsigned long int) codecman.getTotalLost());
         
         // Free memory
         fileman.deleteRes();
@@ -59,6 +82,14 @@ int main(int argc, char **argv) {
     
     // Extract
     if(strncmp("--e", argv[1], strlen(argv[1])) == 0){
+        
+        // Check if there is second and third argument
+        if(argc < 4){
+            printf("Missing arguments!\n");
+            printf(help);
+            
+            return 0;
+        }
         
         // Get data from user
         fileman.setFilenames(argv[2], argv[3], true);
@@ -74,11 +105,13 @@ int main(int argc, char **argv) {
         // Free memory
         fileman.deleteRes();
     }else{
-        printf("Invalid argument!\n");
-        printf(
-            "\nUsage: geiraze [OPTION] [INPUT] [OUTPUT]\nGeiraze is a lossy text compression tool that just keeps text and few symbols.\n\nOperations:\n\t--c\tCompress a text file\n\t--e\tExtract a file compressed used Geiraze\n\n"
-        );
+        printf("Invalid option!\n");
+        printf(help);
     }
     
     return 0;
+}
+
+double percentOf(size_t a, size_t b){
+    return (b*100/a);
 }
